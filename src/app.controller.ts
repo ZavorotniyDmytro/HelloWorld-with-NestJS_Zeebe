@@ -10,37 +10,44 @@ import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
-	private zbClient: ZBClient
+	//private zbClient: ZBClient
 
 	constructor(
 		private readonly configService: ConfigService,
-		@Inject(WINSTON_MODULE_PROVIDER) 
-		private readonly logger: Logger,
-		// @Inject(ZEEBE_CONNECTION_PROVIDER)		private zbClient: ZBClient
-		 ) {
-			this.zbClient = new ZBClient({				
-				onReady: () => console.log('Ready for action!'),
-  				onConnectionError: () => console.log('The gRPC connection failed!')
-			})
+		@Inject(WINSTON_MODULE_PROVIDER)	private readonly logger: Logger,
+		@Inject(ZEEBE_CONNECTION_PROVIDER) 
+		private readonly zbClient: ZBClient) 
+		{
+			// this.zbClient = new ZBClient(				
+			// 	{
+			// 		onReady: () => this.logger.info('Ready for action!'),
+			// 		onConnectionError: () => this.logger.info('The gRPC connection failed!')
+			// 	}
+			// )
+			//zbClient.getServiceTypesFromBpmn(['./bpmn/hello-world-bpmn-diagram.bpmn']).then(tasktypes => console.log('The task types are:', tasktypes))
 		 }
 
 	@Get()
-	getHello()  // Promise<CreateProcessInstanceResponse>
+	async getHello()  // Promise<CreateProcessInstanceResponse>
 	{
 		if (this.zbClient.connected)
 		{
-			return this.zbClient.createProcessInstance('email:send', { massage: 'Hello World!'});
-		}
+			this.logger.info('Hello world!')
+			// return await this.zbClient.createProcessInstance('email:send', { massage: 'Hello World!'})
+			// .then(res => console.log(JSON.stringify(res, null, 2)));
+		}		
 	}
 
-	@ZeebeWorker('email:send')
-	paymentService(@Payload() job: ZeebeJob, @Ctx() context: { complete, worker: ZBWorker<IInputVariables, ICustomHeaders, IOutputVariables> }) {
-		this.logger.info('"Hello World!"-service, Task variables', job.variables);		
-		let updatedVariables = Object.assign({}, job.variables, {
-		paymentService: 'Did my job',
-		});
+	
 
-		job.complete(updatedVariables);
-		return job.variables.massage
-	}
+	// @ZeebeWorker('email:send', {fetchVariable: ['message']})
+	// paymentService(@Payload() job: ZeebeJob, @Ctx() context: { complete, worker: ZBWorker<IInputVariables, ICustomHeaders, IOutputVariables> }) {
+	// 	this.logger.info('"Hello World!"-service, Task variables', job.variables);		
+	// 	let updatedVariables = Object.assign({}, job.variables, {
+	// 		paymentService: 'Did my job',
+	// 	});
+
+	// 	job.complete(updatedVariables);
+	// 	return job.variables.massage
+	// }
 }
